@@ -67,7 +67,7 @@ function buildTree(data) {
     .sort((a, b) => Number(a) - Number(b));
 
   // Рисуем поколения
-   sortedGens.forEach(genKey => {
+    sortedGens.forEach(genKey => {
     // Внешняя обёртка для прокрутки
     const wrapper = document.createElement('div');
     wrapper.className = 'generation-wrapper';
@@ -85,6 +85,10 @@ function buildTree(data) {
       const personDiv = createPersonCard(person);
       genDiv.appendChild(personDiv);
     });
+
+    wrapper.appendChild(genDiv);
+    container.appendChild(wrapper);
+  });
 
 
   // Рисуем связи после того, как DOM обновлён
@@ -190,3 +194,4 @@ document.addEventListener('DOMContentLoaded', () => {
   fetchData();
 
 });
+
