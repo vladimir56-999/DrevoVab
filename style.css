@@ -31,14 +31,12 @@ h1 {
   padding: 20px 0;
 }
 
-/* Обёртка для каждого поколения — обеспечивает центрирование и прокрутку */
 .generation-wrapper {
   display: flex;
   justify-content: center;
   overflow-x: auto;
   padding: 0 10px;
   margin: 10px 0 40px;
-  scroll-snap-type: x proximity;
 }
 
 .generation {
@@ -48,7 +46,6 @@ h1 {
   padding-top: 30px;
   flex-wrap: nowrap;
   min-width: fit-content;
-  scroll-snap-align: center;
 }
 
 .gen-label {
@@ -119,40 +116,18 @@ h1 {
   min-height: 30px;
 }
 
-/* Адаптивность */
 @media (max-width: 1200px) {
-  .person {
-    width: 190px;
-  }
-  .generation {
-    gap: 24px;
-  }
+  .person { width: 190px; }
+  .generation { gap: 24px; }
 }
-
 @media (max-width: 900px) {
-  .person {
-    width: 160px;
-  }
-  .generation {
-    gap: 18px;
-  }
-  h1 {
-    font-size: 24px;
-  }
+  .person { width: 160px; }
+  .generation { gap: 18px; }
+  h1 { font-size: 24px; }
 }
-
 @media (max-width: 600px) {
-  .person {
-    width: 140px;
-    height: auto;
-  }
-  .person-image {
-    height: 130px;
-  }
-  .generation {
-    gap: 12px;
-  }
-  .container {
-    padding: 15px;
-  }
+  .person { width: 140px; height: auto; }
+  .person-image { height: 130px; }
+  .generation { gap: 12px; }
+  .container { padding: 15px; }
 }
