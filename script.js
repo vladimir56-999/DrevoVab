@@ -1,3 +1,4 @@
+// Убедитесь, что это актуальная ссылка на опубликованную Google Таблицу в формате CSV
 const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1t2HYNkqo-_cOu7_nx9sC-0ibmDevy_FmvwK_sjTyf8zfdYCKtuV3v6mOHlf7jrb5PGerj55g0KMt/pub?output=csv';
 
 async function fetchData() {
@@ -26,14 +27,19 @@ function parseCSV(csvText) {
   if (lines.length < 2) return [];
 
   const headers = lines[0].split(',').map(h => h.trim());
-  return lines.slice(1).map(line => {
+  const result = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (!line.trim()) continue; // пропускаем пустые строки
+
     const values = line.split(',');
     const person = {};
-    headers.forEach((header, index) => {
-      person[header] = (values[index] || '').trim();
-    });
-    return person;
-  });
+    for (let j = 0; j < headers.length; j++) {
+      person[headers[j]] = (values[j] || '').trim();
+    }
+    result.push(person);
+  }
+  return result;
 }
 
 function buildTree(data) {
@@ -48,13 +54,15 @@ function buildTree(data) {
   container.innerHTML = '';
   if (loadingEl) loadingEl.style.display = 'none';
 
-  const validData = data.filter(person => person.ID && person.ID.trim() !== '');
+  // Фильтруем только записи с ID
+  const validData = data.filter(person => person.ID && /^\d+$/.test(person.ID));
 
   if (validData.length === 0) {
     container.innerHTML = '<p>Нет данных.</p>';
     return;
   }
 
+  // Группировка по поколению
   const generations = {};
   validData.forEach(person => {
     const gen = (person['Поколение'] || '1').trim() || '1';
@@ -86,6 +94,7 @@ function buildTree(data) {
     container.appendChild(wrapper);
   });
 
+  // Рисуем связи с небольшой задержкой, чтобы DOM обновился
   setTimeout(() => drawConnections(validData, container), 150);
 }
 
@@ -102,12 +111,8 @@ function createPersonCard(person) {
   const nameDiv = document.createElement('div');
   nameDiv.className = 'person-name';
   nameDiv.textContent = person['Имя'] || '—';
-
-  // Tooltip с полным именем
-  const tooltip = document.createElement('div');
-  tooltip.className = 'person-name-tooltip';
-  tooltip.textContent = person['Имя'] || '—';
-  nameDiv.appendChild(tooltip);
+  // Нативная подсказка — надёжно и без багов
+  nameDiv.title = person['Имя'] || '—';
 
   const datesDiv = document.createElement('div');
   datesDiv.className = 'person-dates';
@@ -125,6 +130,7 @@ function createPersonCard(person) {
   return div;
 }
 
+// Родительская связь (синяя)
 function drawLine(svg, from, to) {
   const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   line.setAttribute('x1', from.x);
@@ -137,6 +143,7 @@ function drawLine(svg, from, to) {
   svg.appendChild(line);
 }
 
+// Супружеская связь (красная, пунктирная)
 function drawSpouseLine(svg, from, to) {
   const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   line.setAttribute('x1', from.x);
@@ -166,6 +173,7 @@ function drawConnections(data, container) {
   });
   container.appendChild(svg);
 
+  // Собираем позиции всех карточек
   const positions = new Map();
   const persons = container.querySelectorAll('.person');
   persons.forEach(person => {
@@ -196,21 +204,23 @@ function drawConnections(data, container) {
     }
   });
 
-  // Супружеские связи
+  // Супружеские связи (без дублирования)
   data.forEach(person => {
-    if (!person.ID || !person['Супруг ID']) return;
+    const spouseId = person['Супруг ID'];
+    if (!person.ID || !spouseId) return;
+
     const personId = `person-${person['ID']}`;
-    const spouseId = `person-${person['Супруг ID']}`;
+    const spouseElemId = `person-${spouseId}`;
     const personPos = positions.get(personId);
-    const spousePos = positions.get(spouseId);
-    if (personPos && spousePos && person['ID'] < person['Супруг ID']) {
+    const spousePos = positions.get(spouseElemId);
+
+    if (personPos && spousePos && person.ID < spouseId) {
       drawSpouseLine(svg, personPos, spousePos);
     }
   });
 }
 
+// Запуск после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
   fetchData();
 });
-
-
