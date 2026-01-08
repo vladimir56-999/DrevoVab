@@ -29,7 +29,7 @@ function parseCSV(csvText) {
   const result = [];
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i].trim();
-    if (!line) continue;
+    if (!line || line === ','.repeat(headers.length - 1)) continue; // пропуск пустых строк
 
     const values = line.split(',');
     const person = {};
@@ -106,7 +106,7 @@ function createPersonCard(person) {
   const nameDiv = document.createElement('div');
   nameDiv.className = 'person-name';
   nameDiv.textContent = person['Имя'] || '—';
-  nameDiv.title = person['Имя'] || '—'; // ← надёжная всплывающая подсказка
+  nameDiv.title = person['Имя'] || '—'; // ← ЕДИНСТВЕННОЕ место отображения имени
 
   const datesDiv = document.createElement('div');
   datesDiv.className = 'person-dates';
@@ -175,7 +175,7 @@ function drawConnections(data, container) {
     });
   });
 
-  // Родитель → ребёнок
+  // Родительские связи
   data.forEach(person => {
     if (!person.ID) return;
     const childId = `person-${person['ID']}`;
@@ -192,11 +192,11 @@ function drawConnections(data, container) {
     }
   });
 
-  // Супруг ↔ Супруга (без дублирования)
+  // Супружеские связи (рисуем один раз)
   data.forEach(person => {
     const spouseId = person['Супруг ID'];
     if (!person.ID || !spouseId) return;
-    if (person.ID >= spouseId) return; // рисуем только один раз
+    if (person.ID >= spouseId) return;
 
     const personPos = positions.get(`person-${person['ID']}`);
     const spousePos = positions.get(`person-${spouseId}`);
