@@ -3,8 +3,8 @@ const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1t2
 async function fetchData() {
   const loadingEl = document.getElementById('loading');
   if (loadingEl) {
-    loadingEl.textContent = 'Загрузка данных…';
     loadingEl.style.display = 'block';
+    loadingEl.textContent = 'Загрузка данных…';
   }
 
   try {
@@ -16,7 +16,7 @@ async function fetchData() {
   } catch (error) {
     console.error('Ошибка загрузки данных:', error);
     if (loadingEl) {
-      loadingEl.textContent = 'Ошибка загрузки данных. Проверьте подключение.';
+      loadingEl.textContent = 'Ошибка загрузки. Проверьте подключение.';
     }
   }
 }
@@ -48,27 +48,23 @@ function buildTree(data) {
   container.innerHTML = '';
   if (loadingEl) loadingEl.style.display = 'none';
 
-  if (!data || data.length === 0 || data.every(p => !p.ID)) {
+  const validData = data.filter(person => person.ID && person.ID.trim() !== '');
+
+  if (validData.length === 0) {
     container.innerHTML = '<p>Нет данных.</p>';
     return;
   }
 
-  // Группируем по поколению
   const generations = {};
-  data.forEach(person => {
-    if (!person.ID) return; // пропускаем пустые строки
-    const gen = person['Поколение'] || '1';
+  validData.forEach(person => {
+    const gen = (person['Поколение'] || '1').trim() || '1';
     if (!generations[gen]) generations[gen] = [];
     generations[gen].push(person);
   });
 
-  const sortedGens = Object.keys(generations)
-    .filter(k => generations[k].length > 0)
-    .sort((a, b) => Number(a) - Number(b));
+  const sortedGens = Object.keys(generations).sort((a, b) => Number(a) - Number(b));
 
-  // Рисуем поколения
-    sortedGens.forEach(genKey => {
-    // Внешняя обёртка для прокрутки
+  sortedGens.forEach(genKey => {
     const wrapper = document.createElement('div');
     wrapper.className = 'generation-wrapper';
 
@@ -90,9 +86,7 @@ function buildTree(data) {
     container.appendChild(wrapper);
   });
 
-
-  // Рисуем связи после того, как DOM обновлён
-  setTimeout(() => drawConnections(data, container), 100);
+  setTimeout(() => drawConnections(validData, container), 150);
 }
 
 function createPersonCard(person) {
@@ -105,12 +99,15 @@ function createPersonCard(person) {
   img.alt = person['Имя'] || '—';
   img.className = 'person-image';
 
-  const infoDiv = document.createElement('div');
-  infoDiv.className = 'person-info';
-
   const nameDiv = document.createElement('div');
   nameDiv.className = 'person-name';
   nameDiv.textContent = person['Имя'] || '—';
+
+  // Tooltip с полным именем
+  const tooltip = document.createElement('div');
+  tooltip.className = 'person-name-tooltip';
+  tooltip.textContent = person['Имя'] || '—';
+  nameDiv.appendChild(tooltip);
 
   const datesDiv = document.createElement('div');
   datesDiv.className = 'person-dates';
@@ -118,12 +115,39 @@ function createPersonCard(person) {
   const death = person['Дата смерти'] ? person['Дата смерти'] : 'н.в.';
   datesDiv.textContent = `${birth} – ${death}`;
 
+  const infoDiv = document.createElement('div');
+  infoDiv.className = 'person-info';
   infoDiv.appendChild(nameDiv);
   infoDiv.appendChild(datesDiv);
 
   div.appendChild(img);
   div.appendChild(infoDiv);
   return div;
+}
+
+function drawLine(svg, from, to) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', from.x);
+  line.setAttribute('y1', from.y);
+  line.setAttribute('x2', to.x);
+  line.setAttribute('y2', to.y);
+  line.setAttribute('stroke', '#3498db');
+  line.setAttribute('stroke-width', '1.4');
+  line.setAttribute('stroke-opacity', '0.85');
+  svg.appendChild(line);
+}
+
+function drawSpouseLine(svg, from, to) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', from.x);
+  line.setAttribute('y1', from.y);
+  line.setAttribute('x2', to.x);
+  line.setAttribute('y2', to.y);
+  line.setAttribute('stroke', '#e74c3c');
+  line.setAttribute('stroke-width', '2');
+  line.setAttribute('stroke-opacity', '0.9');
+  line.setAttribute('stroke-dasharray', '4,2');
+  svg.appendChild(line);
 }
 
 function drawConnections(data, container) {
@@ -153,45 +177,38 @@ function drawConnections(data, container) {
     });
   });
 
-  // Рисуем линии от отца и матери к ребёнку
+  // Родительские связи
   data.forEach(person => {
     if (!person.ID) return;
-
     const childId = `person-${person['ID']}`;
     const childPos = positions.get(childId);
     if (!childPos) return;
 
-    // Отец
     if (person['Отец ID']) {
       const fatherId = `person-${person['Отец ID']}`;
       const fatherPos = positions.get(fatherId);
       if (fatherPos) drawLine(svg, fatherPos, childPos);
     }
-
-    // Мать
     if (person['Мать ID']) {
       const motherId = `person-${person['Мать ID']}`;
       const motherPos = positions.get(motherId);
       if (motherPos) drawLine(svg, motherPos, childPos);
     }
   });
+
+  // Супружеские связи
+  data.forEach(person => {
+    if (!person.ID || !person['Супруг ID']) return;
+    const personId = `person-${person['ID']}`;
+    const spouseId = `person-${person['Супруг ID']}`;
+    const personPos = positions.get(personId);
+    const spousePos = positions.get(spouseId);
+    if (personPos && spousePos && person['ID'] < person['Супруг ID']) {
+      drawSpouseLine(svg, personPos, spousePos);
+    }
+  });
 }
 
-function drawLine(svg, from, to) {
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-  line.setAttribute('x1', from.x);
-  line.setAttribute('y1', from.y);
-  line.setAttribute('x2', to.x);
-  line.setAttribute('y2', to.y);
-  line.setAttribute('stroke', '#4A90E2'); // светло-синий для отца, можно менять
-  line.setAttribute('stroke-width', '1.2');
-  line.setAttribute('stroke-opacity', '0.8');
-  svg.appendChild(line);
-}
-
-// Запуск
 document.addEventListener('DOMContentLoaded', () => {
   fetchData();
-
 });
-
