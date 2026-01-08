@@ -67,7 +67,11 @@ function buildTree(data) {
     .sort((a, b) => Number(a) - Number(b));
 
   // Рисуем поколения
-  sortedGens.forEach(genKey => {
+   sortedGens.forEach(genKey => {
+    // Внешняя обёртка для прокрутки
+    const wrapper = document.createElement('div');
+    wrapper.className = 'generation-wrapper';
+
     const genDiv = document.createElement('div');
     genDiv.className = 'generation';
     genDiv.dataset.generation = genKey;
@@ -82,8 +86,6 @@ function buildTree(data) {
       genDiv.appendChild(personDiv);
     });
 
-    container.appendChild(genDiv);
-  });
 
   // Рисуем связи после того, как DOM обновлён
   setTimeout(() => drawConnections(data, container), 100);
@@ -186,4 +188,5 @@ function drawLine(svg, from, to) {
 // Запуск
 document.addEventListener('DOMContentLoaded', () => {
   fetchData();
+
 });
