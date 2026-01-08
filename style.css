@@ -31,6 +31,7 @@ h1 {
   padding: 20px 0;
 }
 
+/* Обёртка для каждого поколения — обеспечивает центрирование и прокрутку */
 .generation-wrapper {
   display: flex;
   justify-content: center;
@@ -63,7 +64,7 @@ h1 {
   font-weight: bold;
   white-space: nowrap;
   z-index: 2;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .person {
@@ -102,34 +103,6 @@ h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  position: relative;
-}
-
-/* Tooltip при наведении */
-.person-name-tooltip {
-  visibility: hidden;
-  background: #333;
-  color: #fff;
-  text-align: center;
-  padding: 5px 8px;
-  border-radius: 4px;
-  position: absolute;
-  z-index: 10;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%) translateY(8px);
-  font-size: 14px;
-  white-space: normal;
-  width: max-content;
-  max-width: 200px;
-  opacity: 0;
-  transition: opacity 0.2s, transform 0.2s;
-}
-
-.person-name:hover .person-name-tooltip {
-  visibility: visible;
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
 }
 
 .person-dates {
@@ -146,17 +119,40 @@ h1 {
   min-height: 30px;
 }
 
+/* Адаптивность */
 @media (max-width: 1200px) {
-  .person { width: 190px; }
-  .generation { gap: 24px; }
+  .person {
+    width: 190px;
+  }
+  .generation {
+    gap: 24px;
+  }
 }
+
 @media (max-width: 900px) {
-  .person { width: 160px; }
-  .generation { gap: 18px; }
+  .person {
+    width: 160px;
+  }
+  .generation {
+    gap: 18px;
+  }
+  h1 {
+    font-size: 24px;
+  }
 }
+
 @media (max-width: 600px) {
-  .person { width: 140px; height: auto; }
-  .person-image { height: 130px; }
-  .generation { gap: 12px; }
-  .container { padding: 15px; }
+  .person {
+    width: 140px;
+    height: auto;
+  }
+  .person-image {
+    height: 130px;
+  }
+  .generation {
+    gap: 12px;
+  }
+  .container {
+    padding: 15px;
+  }
 }
