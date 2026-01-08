@@ -29,10 +29,8 @@ h1 {
   width: 100%;
   min-height: 600px;
   padding: 20px 0;
-  /* Убираем overflow-x здесь — переносим в обёртку */
 }
 
-/* Новая обёртка для прокрутки и центрирования */
 .generation-wrapper {
   display: flex;
   justify-content: center;
@@ -104,6 +102,34 @@ h1 {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  position: relative;
+}
+
+/* Tooltip при наведении */
+.person-name-tooltip {
+  visibility: hidden;
+  background: #333;
+  color: #fff;
+  text-align: center;
+  padding: 5px 8px;
+  border-radius: 4px;
+  position: absolute;
+  z-index: 10;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  font-size: 14px;
+  white-space: normal;
+  width: max-content;
+  max-width: 200px;
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.person-name:hover .person-name-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 .person-dates {
