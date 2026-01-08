@@ -12,7 +12,7 @@ body {
 }
 
 .container {
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 20px;
 }
@@ -27,25 +27,31 @@ h1 {
 #tree-container {
   position: relative;
   width: 100%;
-  overflow-x: auto; /* ← КЛЮЧЕВОЕ: горизонтальная прокрутка */
-  overflow-y: visible;
-  padding: 20px 0;
   min-height: 600px;
+  padding: 20px 0;
+  /* Убираем overflow-x здесь — переносим в обёртку */
 }
 
-/* Каждое поколение — гибкий ряд с центрированием и точной шириной */
-.generation {
+/* Новая обёртка для прокрутки и центрирования */
+.generation-wrapper {
   display: flex;
   justify-content: center;
-  gap: 32px;
-  margin: 40px 0;
-  position: relative;
-  padding-top: 30px;
-  flex-wrap: nowrap; /* не переносить карточки */
-  min-width: fit-content; /* ← ширина по содержимому, даже если > экрана */
+  overflow-x: auto;
+  padding: 0 10px;
+  margin: 10px 0 40px;
+  scroll-snap-type: x proximity;
 }
 
-/* Метка поколения */
+.generation {
+  display: flex;
+  gap: 32px;
+  position: relative;
+  padding-top: 30px;
+  flex-wrap: nowrap;
+  min-width: fit-content;
+  scroll-snap-align: center;
+}
+
 .gen-label {
   position: absolute;
   top: 0;
@@ -62,7 +68,6 @@ h1 {
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
-/* Карточка человека */
 .person {
   background: white;
   border-radius: 12px;
@@ -72,7 +77,7 @@ h1 {
   overflow: hidden;
   position: relative;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
-  flex-shrink: 0; /* ← не сжимать при нехватке места */
+  flex-shrink: 0;
 }
 
 .person:hover {
@@ -106,51 +111,26 @@ h1 {
   color: #7f8c8d;
 }
 
-/* Индикатор загрузки */
 #loading {
   text-align: center;
   font-size: 18px;
   color: #7f8c8d;
   margin: 40px 0;
-  display: none; /* скрыт по умолчанию — JS покажет при загрузке */
+  display: none;
   min-height: 30px;
 }
 
-/* Адаптивность */
 @media (max-width: 1200px) {
-  .person {
-    width: 190px;
-    flex-shrink: 0;
-  }
-  .generation {
-    gap: 24px;
-  }
+  .person { width: 190px; }
+  .generation { gap: 24px; }
 }
-
 @media (max-width: 900px) {
-  .person {
-    width: 160px;
-  }
-  .generation {
-    gap: 18px;
-  }
-  h1 {
-    font-size: 24px;
-  }
+  .person { width: 160px; }
+  .generation { gap: 18px; }
 }
-
 @media (max-width: 600px) {
-  .person {
-    width: 140px;
-    height: auto;
-  }
-  .person-image {
-    height: 130px;
-  }
-  .generation {
-    gap: 12px;
-  }
-  .container {
-    padding: 15px;
-  }
+  .person { width: 140px; height: auto; }
+  .person-image { height: 130px; }
+  .generation { gap: 12px; }
+  .container { padding: 15px; }
 }
