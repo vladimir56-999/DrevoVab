@@ -212,3 +212,4 @@ function drawConnections(data, container) {
 document.addEventListener('DOMContentLoaded', () => {
   fetchData();
 });
+
