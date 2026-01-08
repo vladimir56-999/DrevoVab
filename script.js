@@ -1,4 +1,3 @@
-// Убедитесь, что это актуальная ссылка на опубликованную Google Таблицу в формате CSV
 const GOOGLE_SHEETS_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT1t2HYNkqo-_cOu7_nx9sC-0ibmDevy_FmvwK_sjTyf8zfdYCKtuV3v6mOHlf7jrb5PGerj55g0KMt/pub?output=csv';
 
 async function fetchData() {
@@ -29,8 +28,8 @@ function parseCSV(csvText) {
   const headers = lines[0].split(',').map(h => h.trim());
   const result = [];
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i];
-    if (!line.trim()) continue; // пропускаем пустые строки
+    const line = lines[i].trim();
+    if (!line) continue;
 
     const values = line.split(',');
     const person = {};
@@ -54,15 +53,12 @@ function buildTree(data) {
   container.innerHTML = '';
   if (loadingEl) loadingEl.style.display = 'none';
 
-  // Фильтруем только записи с ID
   const validData = data.filter(person => person.ID && /^\d+$/.test(person.ID));
-
   if (validData.length === 0) {
     container.innerHTML = '<p>Нет данных.</p>';
     return;
   }
 
-  // Группировка по поколению
   const generations = {};
   validData.forEach(person => {
     const gen = (person['Поколение'] || '1').trim() || '1';
@@ -94,7 +90,6 @@ function buildTree(data) {
     container.appendChild(wrapper);
   });
 
-  // Рисуем связи с небольшой задержкой, чтобы DOM обновился
   setTimeout(() => drawConnections(validData, container), 150);
 }
 
@@ -111,8 +106,7 @@ function createPersonCard(person) {
   const nameDiv = document.createElement('div');
   nameDiv.className = 'person-name';
   nameDiv.textContent = person['Имя'] || '—';
-  // Нативная подсказка — надёжно и без багов
-  nameDiv.title = person['Имя'] || '—';
+  nameDiv.title = person['Имя'] || '—'; // ← надёжная всплывающая подсказка
 
   const datesDiv = document.createElement('div');
   datesDiv.className = 'person-dates';
@@ -130,7 +124,6 @@ function createPersonCard(person) {
   return div;
 }
 
-// Родительская связь (синяя)
 function drawLine(svg, from, to) {
   const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   line.setAttribute('x1', from.x);
@@ -143,7 +136,6 @@ function drawLine(svg, from, to) {
   svg.appendChild(line);
 }
 
-// Супружеская связь (красная, пунктирная)
 function drawSpouseLine(svg, from, to) {
   const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
   line.setAttribute('x1', from.x);
@@ -173,10 +165,8 @@ function drawConnections(data, container) {
   });
   container.appendChild(svg);
 
-  // Собираем позиции всех карточек
   const positions = new Map();
-  const persons = container.querySelectorAll('.person');
-  persons.forEach(person => {
+  container.querySelectorAll('.person').forEach(person => {
     const rect = person.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
     positions.set(person.id, {
@@ -185,7 +175,7 @@ function drawConnections(data, container) {
     });
   });
 
-  // Родительские связи
+  // Родитель → ребёнок
   data.forEach(person => {
     if (!person.ID) return;
     const childId = `person-${person['ID']}`;
@@ -193,34 +183,29 @@ function drawConnections(data, container) {
     if (!childPos) return;
 
     if (person['Отец ID']) {
-      const fatherId = `person-${person['Отец ID']}`;
-      const fatherPos = positions.get(fatherId);
+      const fatherPos = positions.get(`person-${person['Отец ID']}`);
       if (fatherPos) drawLine(svg, fatherPos, childPos);
     }
     if (person['Мать ID']) {
-      const motherId = `person-${person['Мать ID']}`;
-      const motherPos = positions.get(motherId);
+      const motherPos = positions.get(`person-${person['Мать ID']}`);
       if (motherPos) drawLine(svg, motherPos, childPos);
     }
   });
 
-  // Супружеские связи (без дублирования)
+  // Супруг ↔ Супруга (без дублирования)
   data.forEach(person => {
     const spouseId = person['Супруг ID'];
     if (!person.ID || !spouseId) return;
+    if (person.ID >= spouseId) return; // рисуем только один раз
 
-    const personId = `person-${person['ID']}`;
-    const spouseElemId = `person-${spouseId}`;
-    const personPos = positions.get(personId);
-    const spousePos = positions.get(spouseElemId);
-
-    if (personPos && spousePos && person.ID < spouseId) {
+    const personPos = positions.get(`person-${person['ID']}`);
+    const spousePos = positions.get(`person-${spouseId}`);
+    if (personPos && spousePos) {
       drawSpouseLine(svg, personPos, spousePos);
     }
   });
 }
 
-// Запуск после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
   fetchData();
 });
